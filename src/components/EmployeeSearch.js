@@ -1,5 +1,21 @@
 import React, { useState } from 'react'
 
+const graphqlQuery = `
+  query SearchEmployees($searchParams: SearchCriteria) {
+    searchEmployees(input: $searchParams) {
+      _id
+			FirstName
+			LastName
+			Age
+			DateOfJoining
+			Title
+			Department
+			EmployeeType
+			CurrentStatus
+    }
+  }
+`
+
 const EmployeeSearch = ({ setFilteredData }) => {
 	const [searchParams, setSearchParams] = useState({
 		FirstName: '',
@@ -12,27 +28,26 @@ const EmployeeSearch = ({ setFilteredData }) => {
 	})
 
 	const handleSearch = () => {
-		const searchQuery = {
-			FirstName: searchParams.FirstName,
-			LastName: searchParams.LastName,
-			Age: searchParams.Age,
-			Title: searchParams.Title,
-			Department: searchParams.Department,
-			EmployeeType: searchParams.EmployeeType,
-			CurrentStatus: searchParams.CurrentStatus,
+		const variables = {
+			searchParams,
 		}
-		fetch('http://localhost:5000/api/employees/search', {
+		fetch('http://localhost:4000/graphql', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify(searchQuery),
+			body: JSON.stringify({
+				query: graphqlQuery,
+				variables: variables,
+			}),
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				setFilteredData(data)
+				setFilteredData(data.data.searchEmployees)
 			})
-			.catch((error) => console.error('Error fetching filtered data:', error))
+			.catch((error) => {
+				console.error(error)
+			})
 	}
 
 	return (

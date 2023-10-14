@@ -3,27 +3,30 @@ import React, { useState, useEffect } from 'react'
 import EmployeeSearch from './EmployeeSearch'
 import EmployeeTable from './EmployeeTable'
 import EmployeeCreate from './EmployeeCreate'
+import { useQuery, gql } from '@apollo/client'
 
-const EmployeeDirectory = () => {
-	const [employees, setEmployees] = useState([])
-	const [filteredData, setFilteredData] = useState('')
-
-	useEffect(() => {
-		const getData = async () => {
-			try {
-				const response = await fetch('http://localhost:5000/api/employees')
-				if (!response.ok) {
-					throw new Error(`Error fetching data1: ${response.status}`)
-				}
-				const data = await response.json()
-				setEmployees(data)
-			} catch (error) {
-				console.error('Error fetching data2:', error)
-			}
+const GET_EMPLOYEES = gql`
+	query GetEmployees {
+		employees {
+			_id
+			FirstName
+			LastName
+			Age
+			DateOfJoining
+			Title
+			Department
+			EmployeeType
+			CurrentStatus
 		}
-		getData()
-	}, [])
+	}
+`
 
+const EmployeeDirectory = ({ client }) => {
+	const [filteredData, setFilteredData] = useState('')
+	const { loading, error, data } = useQuery(GET_EMPLOYEES)
+	console.log(filteredData)
+	if (loading) return <p>Loading...</p>
+	if (error) return <p>Error: {error.message}</p>
 	const handleResetTable = () => {
 		setFilteredData('')
 	}
@@ -42,8 +45,8 @@ const EmployeeDirectory = () => {
 				</>
 			) : (
 				<>
-					<EmployeeSearch setFilteredData={setFilteredData} />
-					<EmployeeTable employees={employees} />
+					<EmployeeSearch setFilteredData={setFilteredData} client={client} />
+					<EmployeeTable employees={data.employees} />
 					<EmployeeCreate />
 				</>
 			)}
